@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>巢品甄选 · 商品配规</title>
+  <style>
+    :root{
+      --navy:#102a4d; --navy-deep:#0b2140; --blue:#4c7ff0; --blue-light:#eef3ff;
+      --text:#26364a; --muted:#8c9bae; --border:#e8edf4; --bg:#f5f7fb;
+      --danger:#e5544d; --success:#1eae74;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;color:var(--text);font:14px/1.45 "Microsoft YaHei","PingFang SC",Arial,sans-serif;background:#fff}
+    button,input,select,textarea{font:inherit} button{cursor:pointer}
+    a{color:inherit;text-decoration:none}
+
+    /* ====== shell ====== */
+    .shell{display:flex;min-height:100vh;background:#fff}
+    .sidebar{position:fixed;z-index:5;width:200px;height:100vh;overflow:auto;
+      color:#c1d0e7;background:linear-gradient(180deg,#102b4e,#0b2140)}
+    .brand{height:60px;padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .brand-mark{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+      background:#fff;color:#3a5c9c;font-size:18px;font-weight:700;flex:none}
+    .brand-text{color:#fff;font-size:17px;font-weight:700;letter-spacing:1px}
+
+    .nav-group{padding:10px 0 4px}
+    .nav-label{margin:6px 18px 6px;color:#5e7191;font-size:12px;letter-spacing:1px}
+    .nav-item{display:flex;align-items:center;gap:10px;height:40px;padding:0 18px;
+      color:#c1d0e7;font-size:14px;cursor:pointer;user-select:none}
+    .nav-item:hover{color:#fff}
+    .nav-item .arrow{margin-left:auto;color:#5e7191;font-size:12px}
+    .nav-item .ico{width:16px;display:inline-grid;place-items:center;color:#7e92b3;font-size:13px}
+    .nav-item.parent{font-size:14px}
+    .nav-item.active{margin:0;background:#477cf1;color:#fff;position:relative}
+    .nav-item.active::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#fff}
+    .subnav .nav-item{padding-left:42px;height:36px;font-size:13px}
+    .subnav .nav-item.active{margin:0;background:#477cf1;color:#fff}
+    .divider{height:1px;margin:8px 14px;background:rgba(255,255,255,.06)}
+
+    /* ====== main ====== */
+    .main{width:calc(100% - 200px);margin-left:200px;min-width:1100px;background:var(--bg)}
+    .topbar{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:#fff;border-bottom:1px solid var(--border)}
+    .top-left{display:flex;align-items:center;gap:14px;color:#7d8897;font-size:14px}
+    .top-left .hamb{font-size:18px;color:#5d6c7f;cursor:pointer}
+    .top-left .home{color:#5d6c7f;cursor:pointer}
+    .top-left .sep{color:#cbd2dc}
+    .top-left .crumb{color:#5d6c7f}
+    .top-right{display:flex;align-items:center;gap:10px;color:#5d6c7f;font-size:14px}
+    .avatar{width:28px;height:28px;border-radius:50%;background:#477cf1;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+
+    .tabbar{height:42px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:flex-end;padding:0 16px;gap:6px}
+    .crumb-tab{height:42px;display:flex;align-items:center;gap:8px;padding:0 18px;color:#7d8897;font-size:14px}
+    .crumb-tab .home{color:#5d6c7f}
+    .crumb-tab .sep{color:#cbd2dc}
+    .crumb-tab .crumb{color:#5d6c7f}
+    .tab{align-self:stretch;display:flex;align-items:center;gap:14px;padding:0 18px;
+      border-radius:8px 8px 0 0;background:#fff;color:var(--blue);font-weight:700;font-size:14px;position:relative}
+    .tab::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--blue)}
+    .tab .close{color:#9da6b3;font-size:16px;font-weight:400;cursor:pointer}
+
+    .content{padding:18px 24px 30px}
+
+    /* ====== page header ====== */
+    .page-title{display:none}
+
+    /* ====== filter card ====== */
+    .card{background:#fff;border:1px solid var(--border);border-radius:4px;padding:18px 20px;margin-bottom:14px}
+    .filter-row{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:center}
+    .field{height:34px;padding:0 12px;border:1px solid #dfe5ee;border-radius:3px;outline:none;color:#4a586a;background:#fff;font-size:14px}
+    .field::placeholder{color:#aab4c2}
+    .btn{height:34px;padding:0 16px;border:1px solid var(--border);border-radius:3px;background:#fff;color:#5d6c7f;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+    .btn.primary{border-color:var(--blue);background:var(--blue);color:#fff}
+    .btn .ico{font-size:13px}
+    .filter-actions{display:flex;align-items:center;gap:10px}
+    .more-filter{color:#5d6c7f;font-size:13px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;margin-left:6px}
+
+    .toolbar-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .toolbar-left{display:flex;gap:10px}
+    .btn-add{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+    .btn-add::before{content:"+";display:inline-grid;place-items:center;width:14px;height:14px;background:rgba(255,255,255,.25);border-radius:2px;font-size:12px;line-height:1}
+
+    /* ====== table ====== */
+    .table-card{background:#fff;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+    .table-wrap{overflow:auto}
+    table{border-collapse:collapse;width:100%;min-width:1280px;font-size:13px}
+    th,td{height:42px;padding:8px 14px;border-right:1px solid #edf0f4;border-bottom:1px solid #edf0f4;text-align:left;white-space:nowrap;color:#344254}
+    th{background:#fafbfc;color:#344254;font-weight:700;font-size:13px}
+    tbody tr:nth-child(even){background:#fbfcfe}
+    tbody tr:hover{background:#f4f7ff}
+    .col-name{min-width:300px}
+    .col-sku{min-width:90px}
+    .col-batch{min-width:140px}
+    .col-store{min-width:100px}
+    .col-num{min-width:120px;text-align:right}
+    .col-action{min-width:120px}
+    .op-link{color:#5b82f2;cursor:pointer;font-size:13px}
+    .op-link+.op-link{margin-left:14px}
+    .op-link.del{color:#5b82f2}
+
+    /* ====== pagination ====== */
+    .pager{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:#fff;border-top:1px solid var(--border)}
+    .pager .total{color:#5d6c7f;font-size:13px}
+    .pager .pages{display:flex;align-items:center;gap:6px}
+    .page-btn{min-width:30px;height:30px;padding:0 8px;border:1px solid var(--border);background:#fff;color:#5d6c7f;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
+    .page-btn.cur{background:var(--blue);border-color:var(--blue);color:#fff}
+    .page-btn:disabled{color:#cbd2dc;cursor:not-allowed;background:#fafbfc}
+    .page-size{display:flex;align-items:center;gap:6px;color:#5d6c7f;font-size:13px}
+    .page-size .sel{height:30px;padding:0 26px 0 10px;border:1px solid var(--border);border-radius:3px;background:#fff;color:#5d6c7f;position:relative;appearance:none;-webkit-appearance:none;font-size:13px}
+    .page-size .sel-wrap{position:relative;display:inline-block}
+    .page-size .sel-wrap::after{content:"⌄";position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#9ca8b7;font-size:12px;pointer-events:none}
+
+    /* ====== page container (list / add / edit) ====== */
+    .page{display:none}
+    .page.active{display:block}
+
+    /* ====== form (新增配规 / 编辑配规) ====== */
+    .breadcrumb-line{height:30px;display:flex;align-items:center;color:#7d8897;font-size:13px;margin-bottom:14px}
+    .breadcrumb-line .cur{color:#26364a}
+    .form-card{background:#fff;border:1px solid var(--border);border-radius:4px;padding:30px 36px 36px;margin-bottom:14px}
+    .form-card h2{margin:0 0 28px;font-size:18px;color:#17283d;font-weight:700;letter-spacing:1px}
+    .form-row{display:flex;align-items:flex-start;gap:16px;margin-bottom:22px}
+    .form-row .label{width:120px;text-align:right;padding-top:8px;color:#26364a;font-size:14px;flex:none;white-space:nowrap}
+    .form-row .control{flex:1;max-width:600px}
+    .form-row.sub-field{margin-left:32px}
+    .form-row.sub-field .label{width:140px}
+    .required::before{content:'*';margin-right:6px;color:var(--danger)}
+
+    .input{height:36px;padding:0 12px;border:1px solid #dfe5ee;border-radius:3px;background:#fff;color:#4a586a;font-size:14px;width:100%;outline:none;display:block}
+    .input::placeholder{color:#aab4c2}
+    .select{height:36px;padding:0 32px 0 12px;border:1px solid #dfe5ee;border-radius:3px;background:#fff;color:#9ca8b7;font-size:14px;width:100%;outline:none;display:flex;align-items:center;justify-content:space-between;position:relative}
+    .select::after{content:"";width:7px;height:7px;border-right:1.5px solid #9ca8b7;border-bottom:1.5px solid #9ca8b7;transform:rotate(45deg);margin-top:-3px}
+
+    .radio-group{display:flex;gap:28px;padding-top:9px;font-size:14px;color:#26364a}
+    .radio-group label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+    .radio{accent-color:var(--blue);width:14px;height:14px;margin:0}
+
+    .btn-pick{height:36px;padding:0 18px;border:1px solid #dfe5ee;border-radius:3px;background:#fff;color:#5d6c7f;font-size:14px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+
+    .batch-set{display:flex;align-items:center;gap:18px;padding-top:1px}
+    .batch-set .input{flex:0 0 360px;width:360px}
+    .batch-link{color:var(--blue);font-size:13px;cursor:pointer}
+
+    .time-range{display:flex;align-items:center;gap:14px;padding-top:1px}
+    .time-range .select{flex:0 0 220px;width:220px}
+    .time-range .sep{color:#aab4c2;font-size:14px}
+
+    .switch{position:relative;display:inline-block;width:38px;height:20px;margin-top:9px}
+    .switch input{opacity:0;width:0;height:0}
+    .switch .slider{position:absolute;inset:0;background:#cfd6e0;border-radius:20px;cursor:pointer;transition:.15s}
+    .switch .slider::before{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.15s}
+    .switch input:checked + .slider{background:var(--blue)}
+    .switch input:checked + .slider::before{transform:translateX(18px)}
+
+    /* ====== 底部固定操作条 ====== */
+    .footer-actions{position:fixed;z-index:3;left:200px;right:0;bottom:0;height:64px;display:none;align-items:center;justify-content:center;gap:14px;background:rgba(255,255,255,.96);border-top:1px solid var(--border)}
+    .footer-actions.show{display:flex}
+    .footer-actions .btn{height:36px;padding:0 32px;font-size:14px}
+
+    /* ====== 选择门店按钮组 / 门店表格 ====== */
+    .pick-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .btn-pick.import{color:var(--blue);border-color:#b8ccf8}
+    .store-table{margin-top:14px;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+    .store-table table{border-collapse:collapse;width:100%;min-width:0;font-size:13px}
+    .store-table th,.store-table td{height:38px;padding:6px 12px;border-right:1px solid #edf0f4;border-bottom:1px solid #edf0f4;text-align:left;white-space:nowrap;color:#344254}
+    .store-table th{background:#fafbfc;font-weight:700}
+    .store-table tbody tr:nth-child(even){background:#fbfcfe}
+
+    /* ====== 批量导入弹窗 ====== */
+    .modal-backdrop{position:fixed;z-index:20;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,31,49,.4)}
+    .modal-backdrop.show{display:flex}
+    .modal{width:660px;max-width:92vw;border-radius:6px;background:#fff;box-shadow:0 14px 34px rgba(0,0,0,.2);overflow:hidden}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;font-size:16px;font-weight:700;color:#17283d;border-bottom:1px solid var(--border)}
+    .modal-head .close{color:#9da6b3;font-size:20px;cursor:pointer;font-weight:400}
+    .modal-body{padding:20px 24px 8px}
+    .modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:14px 22px;border-top:1px solid var(--border);background:#fafbfc}
+    .import-guide{padding:2px 0 8px}
+    .import-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:#5d6c7f;font-size:14px}
+    .import-row .step{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+    .import-row .dl-link{color:var(--blue);cursor:pointer;font-size:13px}
+    .upload-area{margin:4px 0 4px 34px;height:110px;border:1px dashed #c5d2e6;border-radius:6px;background:#fafcff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#8c9bae;cursor:pointer;font-size:13px;transition:.15s}
+    .upload-area:hover{border-color:var(--blue);color:var(--blue);background:#f4f8ff}
+    .upload-area .up-ico{font-size:24px;color:#b3c3dc}
+    .upload-area .up-link{color:var(--blue)}
+    .import-result{margin:6px 0 10px 34px;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+    .import-result .result-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fafbfc;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;color:#17283d}
+    .import-result .result-head .stat{font-weight:400;font-size:13px;color:#5d6c7f}
+    .import-result .stat b{color:#e5544d}
+    .import-result table{border-collapse:collapse;width:100%;font-size:13px}
+    .import-result th,.import-result td{height:36px;padding:6px 12px;border-right:1px solid #edf0f4;border-bottom:1px solid #edf0f4;text-align:left;white-space:nowrap;color:#344254}
+    .import-result th{background:#fafbfc;font-weight:700}
+    .import-result .pass{color:var(--success)}
+    .import-result .fail{color:var(--danger)}
+
+    /* ====== toast ====== */
+    .toast{position:fixed;z-index:30;top:50%;left:50%;transform:translate(-50%,-50%);padding:12px 22px;border-radius:6px;background:rgba(23,40,61,.92);color:#fff;font-size:14px;display:none;pointer-events:none}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- ============ 侧边栏 ============ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">N</span>
+        <span class="brand-text">巢品甄选</span>
+      </div>
+      <div class="nav-group">
+        <div class="nav-item parent"><span class="ico">▦</span>库位运费<span class="arrow">⌄</span></div>
+        <div class="nav-item parent"><span class="ico">◉</span>用户管理<span class="arrow">⌄</span></div>
+
+        <p class="nav-label">零售中心</p>
+        <div class="nav-item parent" style="color:#fff"><span class="ico">▧</span>商品管理<span class="arrow">⌄</span></div>
+        <div class="subnav">
+          <div class="nav-item">商品库位</div>
+          <div class="nav-item active">商品配规</div>
+        </div>
+        <div class="nav-item parent"><span class="ico">▦</span>交易管理<span class="arrow">⌄</span></div>
+
+        <p class="nav-label">运营中心</p>
+        <div class="nav-item parent"><span class="ico">▤</span>优惠券管理<span class="arrow">⌄</span></div>
+        <div class="nav-item parent"><span class="ico">▣</span>B端促销活动<span class="arrow">⌄</span></div>
+        <div class="nav-item parent"><span class="ico">▥</span>内容管理<span class="arrow">⌄</span></div>
+        <div class="nav-item parent"><span class="ico">✉</span>消息广告<span class="arrow">⌄</span></div>
+        <div class="nav-item parent"><span class="ico">¥</span>财务管理<span class="arrow">⌄</span></div>
+        <div class="nav-item parent"><span class="ico">★</span>积分管理<span class="arrow">⌄</span></div>
+
+        <p class="nav-label">报表中心</p>
+        <div class="nav-item parent"><span class="ico">▤</span>报表中心<span class="arrow">⌄</span></div>
+      </div>
+    </aside>
+
+    <!-- ============ 主区 ============ -->
+    <main class="main">
+      <header class="topbar">
+        <div class="top-left">
+          <span class="hamb">☰</span>
+          <span class="home">⌂</span>
+          <span class="crumb">商品配规</span>
+        </div>
+        <div class="top-right">
+          <span class="avatar">HL</span>
+          <span>HL系统管理员</span>
+        </div>
+      </header>
+
+      <div class="tabbar">
+        <div class="tab" id="tab-list">
+          <span>商品配规</span>
+          <span class="close">×</span>
+        </div>
+        <div class="tab" id="tab-add" style="display:none">
+          <span id="tab-add-label">新增配规</span>
+          <span class="close">×</span>
+        </div>
+      </div>
+
+      <div class="content">
+      <!-- ====== 列表页 ====== -->
+      <section id="page-list" class="page active">
+        <!-- 筛选卡 -->
+        <div class="card">
+          <div class="filter-row">
+            <div>
+              <div style="font-size:13px;color:#5d6c7f;margin-bottom:6px">SKU名称</div>
+              <input class="field" style="width:100%" placeholder="请输入SKU名称" />
+            </div>
+            <div>
+              <div style="font-size:13px;color:#5d6c7f;margin-bottom:6px">SKU ID</div>
+              <input class="field" style="width:100%" placeholder="请输入SKU ID" />
+            </div>
+            <div class="filter-actions">
+              <button class="btn primary"><span class="ico">⌕</span>查询</button>
+              <button class="btn">重置</button>
+              <span class="more-filter">更多筛选 <span style="color:#9ca8b7">⌄</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作行 -->
+        <div class="toolbar-row">
+          <div class="toolbar-left">
+            <button class="btn btn-add">新增</button>
+            <button class="btn">⇧ 导出</button>
+          </div>
+        </div>
+
+        <!-- 表格 -->
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-name">SKU名称</th>
+                  <th class="col-sku">SKU ID</th>
+                  <th class="col-batch">批次</th>
+                  <th class="col-store">配额门店</th>
+                  <th class="col-num">小程序总配额</th>
+                  <th class="col-num">小程序已使用配额</th>
+                  <th class="col-num">小程序剩余</th>
+                  <th class="col-action">操作</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div class="pager">
+            <span class="total">共 24 条</span>
+            <div class="pages">
+              <button class="page-btn" disabled>‹</button>
+              <button class="page-btn cur">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">›</button>
+            </div>
+            <div class="page-size">
+              <div class="sel-wrap">
+                <select class="sel">
+                  <option>20条/页</option>
+                  <option>50条/页</option>
+                  <option>100条/页</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ====== /列表页 ====== -->
+
+      <!-- ====== 新增 / 编辑配规（通用表单） ====== -->
+      <section id="page-form" class="page">
+        <div class="breadcrumb-line">
+          <span>商品配规</span>
+          <span style="margin:0 8px">/</span>
+          <span class="cur" id="breadcrumb-cur">新增配规</span>
+        </div>
+
+        <div class="form-card">
+          <h2>商品配规</h2>
+
+          <div class="form-row">
+            <label class="label required">基础SKU</label>
+            <div class="control">
+              <div class="select"><span id="sku-value">请选择基础SKU</span></div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="label required">配额门店</label>
+            <div class="control">
+              <div class="radio-group">
+                <label><input class="radio" type="radio" name="store-type"> 全部门店</label>
+                <label><input class="radio" type="radio" name="store-type" checked> 指定门店</label>
+                <label><input class="radio" type="radio" name="store-type"> 指定省份</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row sub-field">
+            <label class="label required">选择门店</label>
+            <div class="control">
+              <div class="pick-actions">
+                <button class="btn-pick">选择门店</button>
+                <button class="btn-pick" onclick="downloadTemplate()">⇓ 下载模板</button>
+                <button class="btn-pick import" onclick="openImport()">⇧ 批量导入</button>
+              </div>
+              <div class="store-table" id="store-table" style="display:none">
+                <table>
+                  <thead>
+                    <tr><th>门店ID</th><th>门店名称</th><th>小程序配额</th><th>小程序已用配额</th></tr>
+                  </thead>
+                  <tbody id="store-rows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row sub-field">
+            <label class="label">批量设置</label>
+            <div class="control batch-set">
+              <input class="input" placeholder="请输入小程序配额" />
+              <a class="batch-link">批量填入</a>
+            </div>
+          </div>
+
+          <div class="form-row sub-field">
+            <label class="label required">规则生效时间</label>
+            <div class="control time-range">
+              <div class="select"><span>开始时间</span></div>
+              <span class="sep">~</span>
+              <div class="select"><span>结束时间</span></div>
+            </div>
+          </div>
+
+          <div class="form-row sub-field">
+            <label class="label required">状态</label>
+            <div class="control">
+              <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ====== /新增 / 编辑配规 ====== -->
+      </div>
+    </main>
+  </div>
+
+  <!-- ====== 底部固定操作条 ====== -->
+  <div class="footer-actions" id="footer-actions">
+    <button class="btn primary">保存</button>
+    <button class="btn footer-cancel">取消</button>
+  </div>
+
+  <!-- ====== 批量导入弹窗 ====== -->
+  <div class="modal-backdrop" id="import-modal">
+    <div class="modal">
+      <div class="modal-head">
+        <span>批量导入</span>
+        <span class="close" onclick="closeImport()">×</span>
+      </div>
+      <div class="modal-body">
+        <div class="import-guide" id="import-guide">
+          <div class="import-row">
+            <span class="step">1</span>
+            <span>下载模板，按模板格式填写门店配额</span>
+            <a class="dl-link" onclick="downloadTemplate()">下载模板</a>
+          </div>
+          <div class="import-row">
+            <span class="step">2</span>
+            <span>上传填写完成的文件（支持 .xlsx / .csv）</span>
+          </div>
+          <div class="upload-area" onclick="doImport()">
+            <div class="up-ico">⇧</div>
+            <div>点击上传文件</div>
+            <div class="up-link">选择文件</div>
+          </div>
+        </div>
+        <div class="import-result" id="import-result" style="display:none">
+          <div class="result-head">
+            <span>校验结果</span>
+            <span class="stat" id="result-stat"></span>
+          </div>
+          <table>
+            <thead id="result-head-row"></thead>
+            <tbody id="result-rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="closeImport()">取消</button>
+        <button class="btn primary" id="btn-import-start" style="display:none" onclick="confirmImport()">开始导入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== toast ====== -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const data = [
+      ['B260708AM530','指定门店', 40 , 0  , 40],
+      ['B260810AT968','指定门店', 37 , 36 , 1 ],
+      ['B260808SX585','指定门店', 265, 265, 0 ],
+      ['B260808OJ580','指定门店', 345, 345, 0 ],
+      ['B260808PO546','指定门店', 275, 275, 0 ],
+      ['B260711SO172','指定门店', 658, 652, 6 ],
+      ['B260528MW755','指定门店', 762, 762, 0 ],
+      ['B260711SO172','指定门店', 69 , 69 , 0 ],
+      ['B260711EL775','指定门店', 18 , 18 , 0 ],
+    ];
+    const skuName = '雀巢肽敏舒1+HMO含乳清深度水解配方奶粉 400g';
+    const rows = data.map((r, i) => `
+      <tr>
+        <td class="col-name">${skuName}</td>
+        <td class="col-sku">21</td>
+        <td class="col-batch">${r[0]}</td>
+        <td class="col-store">${r[1]}</td>
+        <td class="col-num">${r[2]}</td>
+        <td class="col-num">${r[3]}</td>
+        <td class="col-num">${r[4]}</td>
+        <td class="col-action">
+          <a class="op-link" onclick="showPage('edit', ${i})">编辑</a>
+          <a class="op-link del">删除</a>
+        </td>
+      </tr>
+    `).join('');
+    document.getElementById('rows').innerHTML = rows;
+
+    // ====== 状态 ======
+    let currentMode = 'add';
+    let currentRow = null;
+
+    // ====== 页面切换：列表 ↔ 新增/编辑配规 ======
+    function showPage(p, rowIndex) {
+      currentMode = p;
+      currentRow = (p === 'edit' && rowIndex != null) ? data[rowIndex] : null;
+
+      document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+      const target = document.getElementById(p === 'list' ? 'page-list' : 'page-form');
+      if (target) target.classList.add('active');
+
+      const isForm = p === 'add' || p === 'edit';
+      document.getElementById('tab-list').style.display = 'inline-flex';
+      document.getElementById('tab-add').style.display = isForm ? 'inline-flex' : 'none';
+      document.getElementById('footer-actions').classList.toggle('show', isForm);
+
+      if (isForm) {
+        const isEdit = p === 'edit';
+        const title = isEdit ? '编辑配规' : '新增配规';
+        document.getElementById('breadcrumb-cur').textContent = title;
+        document.getElementById('tab-add-label').textContent = title;
+        const skuEl = document.getElementById('sku-value');
+        skuEl.textContent = isEdit ? skuName : '请选择基础SKU';
+        skuEl.style.color = isEdit ? '#4a586a' : '#9ca8b7';
+        // 编辑页展示当前已选门店表格
+        const storeTable = document.getElementById('store-table');
+        const storeRows = document.getElementById('store-rows');
+        if (isEdit && currentRow) {
+          storeRows.innerHTML = buildStoreRows(currentRow).map(s =>
+            `<tr><td>${s.id}</td><td>${s.name}</td><td>${s.quota}</td><td>${s.used}</td></tr>`).join('');
+          storeTable.style.display = 'block';
+        } else {
+          storeRows.innerHTML = '';
+          storeTable.style.display = 'none';
+        }
+      }
+      window.scrollTo(0, 0);
+    }
+
+    // 编辑页：根据行数据构造门店列表
+    function buildStoreRows(r) {
+      const quota = r[2];
+      const used = r[3];
+      return [
+        { id: '10001', name: '重庆渝欧·解放碑店', quota: quota, used: used },
+        { id: '10002', name: '重庆渝欧·观音桥店', quota: Math.floor(quota * 0.4), used: Math.min(used, Math.floor(quota * 0.4)) },
+        { id: '10003', name: '重庆渝欧·南坪店', quota: Math.floor(quota * 0.3), used: 0 },
+      ];
+    }
+
+    document.querySelector('.btn-add').addEventListener('click', () => showPage('add'));
+    document.querySelector('#tab-add .close').addEventListener('click', () => showPage('list'));
+    document.querySelector('.footer-cancel').addEventListener('click', () => showPage('list'));
+
+    // ====== 下载模板 ======
+    function downloadTemplate() {
+      const csv = '序号,门店ID,小程序配额\n1,10001,50\n2,10002,30\n3,10003,80';
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '商品配规-门店配额导入模板.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('模板下载中');
+    }
+
+    // ====== 批量导入弹窗 ======
+    function openImport() {
+      document.getElementById('import-modal').classList.add('show');
+      document.getElementById('import-guide').style.display = 'block';
+      document.getElementById('import-result').style.display = 'none';
+      document.getElementById('btn-import-start').style.display = 'none';
+    }
+    function closeImport() {
+      document.getElementById('import-modal').classList.remove('show');
+    }
+
+    // 模拟上传后校验
+    function doImport() {
+      const isEdit = currentMode === 'edit';
+      document.getElementById('import-guide').style.display = 'none';
+      document.getElementById('import-result').style.display = 'block';
+      document.getElementById('btn-import-start').style.display = 'inline-flex';
+
+      let head, rowsHtml, passCount, failCount;
+      if (!isEdit) {
+        // 新增：校验门店是否存在
+        head = '<tr><th>序号</th><th>门店ID</th><th>小程序配额</th><th>校验结果</th></tr>';
+        const results = [
+          { no: 1, id: '10001', quota: 50, ok: true,  msg: '门店存在，校验通过' },
+          { no: 2, id: '10002', quota: 30, ok: true,  msg: '门店存在，校验通过' },
+          { no: 3, id: '99999', quota: 80, ok: false, msg: '门店不存在，校验失败' },
+        ];
+        passCount = results.filter(x => x.ok).length;
+        failCount = results.length - passCount;
+        rowsHtml = results.map(x => `<tr><td>${x.no}</td><td>${x.id}</td><td>${x.quota}</td><td class="${x.ok ? 'pass' : 'fail'}">${x.msg}</td></tr>`).join('');
+      } else {
+        // 编辑：不存在新增、存在覆盖（配额 ≥ 已用）
+        head = '<tr><th>序号</th><th>门店ID</th><th>小程序配额</th><th>已用配额</th><th>校验结果</th></tr>';
+        const results = [
+          { no: 1, id: '10001', quota: 80, used: 60, ok: true,  msg: '门店已存在，覆盖（80≥60）' },
+          { no: 2, id: '10005', quota: 40, used: 0,  ok: true,  msg: '门店不存在，新增' },
+          { no: 3, id: '10002', quota: 30, used: 45, ok: false, msg: '覆盖失败：配额(30) < 已用配额(45)' },
+        ];
+        passCount = results.filter(x => x.ok).length;
+        failCount = results.length - passCount;
+        rowsHtml = results.map(x => `<tr><td>${x.no}</td><td>${x.id}</td><td>${x.quota}</td><td>${x.used}</td><td class="${x.ok ? 'pass' : 'fail'}">${x.msg}</td></tr>`).join('');
+      }
+      document.getElementById('result-head-row').innerHTML = head;
+      document.getElementById('result-rows').innerHTML = rowsHtml;
+      document.getElementById('result-stat').innerHTML = `通过 <b style="color:#1eae74">${passCount}</b> 条 / 失败 <b>${failCount}</b> 条`;
+    }
+
+    function confirmImport() {
+      closeImport();
+      showToast(currentMode === 'edit' ? '导入成功，已更新门店配额' : '导入成功，已新增门店配额');
+      if (currentMode === 'edit' && currentRow) {
+        document.getElementById('store-rows').innerHTML = buildStoreRows(currentRow).map(s =>
+          `<tr><td>${s.id}</td><td>${s.name}</td><td>${s.quota}</td><td>${s.used}</td></tr>`).join('');
+      }
+    }
+
+    // ====== toast ======
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.display = 'none'; }, 1600);
+    }
+  </script>
+</body>
+</html>
